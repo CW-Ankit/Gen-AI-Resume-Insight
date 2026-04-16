@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser, logoutUser } from "../controllers/authController.js";
+import { loginUser, registerUser, logoutUser, refreshAccessToken } from "../controllers/authController.js";
 
 const authRouter = Router()
 
@@ -24,5 +24,12 @@ authRouter.post("/login", loginUser)
  * @access Public
  */
 authRouter.get("/logout", logoutUser)
+
+/**
+ * @route GET /api/auth/refresh-access-token
+ * @description refresh access token using refresh token
+ * @access Public
+ */
+authRouter.get("/refresh-access-token",refreshAccessToken)
 
 export default authRouter
