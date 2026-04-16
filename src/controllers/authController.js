@@ -1,4 +1,5 @@
 import userModel from "../models/userModel.js";
+import tokenBlacklistModel from "../models/blacklistModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"
 import config from "../config/config.js";
@@ -56,7 +57,19 @@ export async function registerUser(req, res) {
         { expiresIn: "15m" }
     )
 
-    res.cookie("accessToken", accessToken)
+    const refreshToken = jwt.sign(
+        { id: user._id },
+        config.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+    );
+
+    // 3. Set the Refresh Token in a secure httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.status(201).json({
         message: "user created successfully",
@@ -64,7 +77,8 @@ export async function registerUser(req, res) {
             username,
             email,
             verified: true
-        }
+        },
+        accessToken
     })
 }
 
@@ -101,7 +115,18 @@ export async function loginUser(req, res) {
         { expiresIn: "15m" }
     )
 
-    res.cookie("accessToken", accessToken)
+    const refreshToken = jwt.sign(
+        { id: user._id },
+        config.JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.status(200).json({
         message: "user logged in successfully",
@@ -109,18 +134,56 @@ export async function loginUser(req, res) {
             id: user._id,
             username: user.username,
             email: user.email
-        }
+        },
+        accessToken
     })
 }
+
+/**
+ * @name refreshAccessToken
+ * @route GET /api/auth/refresh-access-token
+ * @description Controller for refreshing the access token using refresh token
+ * @access Public
+ * @param {*} req Request coming from the API [cookies = refreshToken]
+ * @param {*} res Response going to the API [accessToken]
+ */
+export async function refreshAccessToken(req, res) {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) return res.status(401).json({ message: "No refresh token" });
+
+    try {
+        // Verify the token
+        const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
+
+        // Verify against DB to ensure it wasn't revoked
+        const user = await userModel.findById(decoded.id);
+        if (!user || user.refreshToken !== refreshToken) {
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
+
+        // Generate new Access Token
+        const newAccessToken = jwt.sign(
+            { id: user._id, username: user.username },
+            config.JWT_SECRET,
+            { expiresIn: "15m" }
+        );
+
+        res.status(200).json({ accessToken: newAccessToken });
+    } catch (err) {
+        return res.status(403).json({ message: "Expired refresh token" });
+    }
+}
+
 
 /**
  * @name logoutUser
  * @route GET /api/auth/register
  * @description Controller for logging out a User from the Application and blacklisting the access token
  * @access Public
- * @param {*} req Request coming from the API [username, password || (current) email, password]
+ * @param {*} req Request coming from the API 
  * @param {*} res Response going to the API 
  */
-export default function logoutUser(req, res) {
-    
+export async function logoutUser(req, res) {
+    return
 }
