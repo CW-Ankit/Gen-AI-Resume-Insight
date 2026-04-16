@@ -150,6 +150,27 @@ export async function loginUser(req, res) {
 }
 
 /**
+ * @name getMe
+ * @route GET /api/auth/me
+ * @description Controller for getting the details of the logged in User using access token
+ * @access Private
+ * @param {*} req Request coming from the API [headers = accessToken]
+ * @param {*} res Response going to the API [user details]
+ */
+export async function getMe(req, res) {
+    const user = await userModel.findById(req.user.id)
+
+    res.status(200).json({
+        message:"User details fetched successfully",
+        user:{
+            id: user._id,
+            username:user.username,
+            email: user.email
+        }
+    })
+}
+
+/**
  * @name refreshAccessToken
  * @route GET /api/auth/refresh-access-token
  * @description Controller for refreshing the access token using refresh token
