@@ -5,7 +5,7 @@ import config from "../config/config.js";
 
 /**
  * @name registerUser
- * @route /api/auth/register
+ * @route POST /api/auth/register
  * @description Controller for registering a User into the Application using username, email & password
  * @access Public
  * @param {*} req Request coming from the API [username, email, password]
@@ -70,7 +70,7 @@ export async function registerUser(req, res) {
 
 /**
  * @name registerUser
- * @route /api/auth/register
+ * @route POST /api/auth/register
  * @description Controller for registering a User into the Application using username, email & password
  * @access Public
  * @param {*} req Request coming from the API [username, password || (current) email, password]
@@ -111,4 +111,16 @@ export async function loginUser(req, res) {
             email: user.email
         }
     })
+}
+
+/**
+ * @name logoutUser
+ * @route GET /api/auth/register
+ * @description Controller for logging out a User from the Application and blacklisting the access token
+ * @access Public
+ * @param {*} req Request coming from the API [username, password || (current) email, password]
+ * @param {*} res Response going to the API 
+ */
+export default function logoutUser(req, res) {
+    
 }

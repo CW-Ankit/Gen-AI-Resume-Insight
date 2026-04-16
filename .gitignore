@@ -1,4 +1,5 @@
 .vscode
+.postman
 
 node_modules
 
