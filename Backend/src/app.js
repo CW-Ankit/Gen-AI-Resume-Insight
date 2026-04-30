@@ -4,6 +4,7 @@ import cors from "cors"
 
 import authRouter from "./routes/authRoutes.js";
 import config from "./config/config.js";
+import interviewRouter from "./routes/interviewRoutes.js";
 
 const app = express()
 
@@ -21,6 +22,9 @@ app.use(cors({
  * Authentication Route
  */
 app.use("/api/auth", authRouter)
-
+/**
+ *  Interview Routes
+ */
+app.use("/api/interview",interviewRouter)
 
 export default app
